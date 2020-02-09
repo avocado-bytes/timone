@@ -1,8 +1,10 @@
 package cz.avocado.postal;
 
+import cz.avocado.postal.model.Fees;
 import cz.avocado.postal.model.Parcel;
 import cz.avocado.postal.util.FileUtils;
 import cz.avocado.postal.util.ParcelUtils;
+import cz.avocado.postal.util.Utils;
 import org.apache.commons.cli.*;
 
 import java.util.ArrayList;
@@ -15,13 +17,14 @@ public class Main {
     private static final String EXIT_KEYWORD = "quit";
     private static final String LIST_KEYWORD = "list";
     private static List<Parcel> inputs = new ArrayList<>();
+    private static Fees fees = new Fees();
 
     public static void main(String[] args) {
         cliOptionsHandling(args);
 
         var scanner = new Scanner(System.in);
 
-        ParcelUtils.info("Waiting for package input. To end program type 'quit'");
+        Utils.info("Waiting for package input. To end program type 'quit'");
 
         while (true) {
             var input = scanner.nextLine();
@@ -31,17 +34,20 @@ public class Main {
             }
 
             if (input.equalsIgnoreCase(LIST_KEYWORD)) {
-                inputs.forEach(it -> ParcelUtils.info(it.toString()));
+                inputs.forEach(it -> Utils.info(it.toString()));
                 continue;
             }
 
-            Optional<Parcel> parcel = ParcelUtils.processInput(ParcelUtils.sanitizeInput(input));
+            Optional<Parcel> parcel = ParcelUtils.processInput(Utils.sanitizeInput(input));
             if (parcel.isEmpty()) {
-                ParcelUtils.error("Input was incorrect. The data will not be persisted");
+                Utils.error("Input was incorrect. The data will not be persisted");
                 continue;
             }
-            ParcelUtils.info("Parcel saved, type 'list' to see saved items");
-            inputs.add(parcel.get());
+
+            var par = parcel.get();
+            par.setFee(fees.getFee(par.getPackageWeight()));
+            Utils.info("Parcel saved, type 'list' to see saved items");
+            inputs.add(par);
         }
 
     }
@@ -62,13 +68,32 @@ public class Main {
                                 "will be printed and the faulty entry will not be persisted.")
         );
 
+        options.addOption(
+                new Option("f", "fees", true,
+                        "Specify the path to the input file where fees for parcel weights are defined.")
+        );
+
         CommandLine cmd;
         try {
             cmd = parser.parse(options, args);
+
             String filePath = cmd.getOptionValue('p');
-            ParcelUtils.info(String.format("Starting import from file: %s...", filePath));
-            FileUtils.readFile(filePath).forEach(parcel -> inputs.add(parcel));
-            ParcelUtils.info("Initial import done.");
+            String feesFilePath = cmd.getOptionValue('f');
+            if (feesFilePath != null && !feesFilePath.isEmpty()) {
+                Utils.info(String.format("Starting fee configuration import from file: %s...", feesFilePath));
+                fees = FileUtils.readFeesFile(feesFilePath);
+                Utils.info("Fees import done.");
+            } else {
+                fees = new Fees();
+            }
+
+            Utils.info(String.format("Starting import from file: %s...", filePath));
+            FileUtils.readInitializationFile(filePath).forEach(parcel -> {
+                parcel.setFee(fees.getFee(parcel.getPackageWeight()));
+                inputs.add(parcel);
+            });
+            Utils.info("Initial import done.");
+
         } catch (ParseException e) {
             formatter.printHelp("Timone Parcel Utility", options);
         } catch (Exception e) {

@@ -1,5 +1,7 @@
 package cz.avocado.postal.util;
 
+import cz.avocado.postal.model.Fees;
+import cz.avocado.postal.model.Pair;
 import cz.avocado.postal.model.Parcel;
 
 import java.io.*;
@@ -19,13 +21,29 @@ public class FileUtils {
      * @param filePath
      * @return
      */
-    public static Stream<Parcel> readFile(String filePath) {
-
+    public static Stream<Parcel> readInitializationFile(String filePath) {
         return readFileByLines(filePath).stream()
-                .map(ParcelUtils::sanitizeInput)
+                .map(Utils::sanitizeInput)
                 .map(ParcelUtils::processInput)
                 .filter(Optional::isPresent)
                 .map(Optional::get);
+    }
+
+    /**
+     * This method reads the contents of the fee configuration file and keeps it in memory to use later for Parcels.
+     * @param filePath
+     * @return
+     */
+    public static Fees readFeesFile(String filePath) {
+        var lines = readFileByLines(filePath);
+        Fees fees = new Fees();
+        lines.stream()
+                .map(Utils::sanitizeInput)
+                .map(FeeUtils::processInput)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .forEach(fee -> fees.addFee(fee.getFirst(), fee.getSecond()));
+        return fees;
     }
 
     /**
@@ -42,7 +60,7 @@ public class FileUtils {
             var file = new File(filePath);
             reader = new BufferedReader(new FileReader(file));
         } catch (FileNotFoundException e) {
-            ParcelUtils.error(String.format("Could not find file: %s.", filePath));
+            Utils.error(String.format("Could not find file: %s.", filePath));
             return Collections.emptyList();
         }
 
@@ -53,7 +71,7 @@ public class FileUtils {
             try {
                 if (!((line = reader.readLine()) != null)) break;
             } catch (IOException e) {
-                ParcelUtils.error("Error reading file line.");
+                Utils.error("Error reading file line.");
                 continue;
             }
             lines.add(line);
@@ -63,7 +81,7 @@ public class FileUtils {
             reader.close();
         } catch (IOException e) {
             e.printStackTrace();
-            ParcelUtils.error("Error closing file. Possible memory leak.");
+            Utils.error("Error closing file. Possible memory leak.");
         }
 
         return lines;

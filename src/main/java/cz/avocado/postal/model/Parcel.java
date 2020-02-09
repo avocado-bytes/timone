@@ -10,7 +10,6 @@ import javax.validation.constraints.Positive;
 
 @Data
 @EqualsAndHashCode
-@AllArgsConstructor
 public class Parcel {
 
     @NotNull(message = "Package weight cannot be null")
@@ -18,9 +17,19 @@ public class Parcel {
     private Float packageWeight;
     @NotNull(message = "Packge number cannot be null")
     private Integer packageNumber;
+    private Float fee = -1f;
+
+    public Parcel(Float packageWeight, Integer packageNumber) {
+        this.packageWeight = packageWeight;
+        this.packageNumber = packageNumber;
+    }
 
     @Override
     public String toString() {
+        if (this.fee > 0) {
+            return String.format("%d %.3f %f", this.packageNumber, this.packageWeight, this.fee);
+        }
+
         return String.format("%d %.3f", this.packageNumber, this.packageWeight);
     }
 }
