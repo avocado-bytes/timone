@@ -2,6 +2,7 @@ package cz.avocado.postal.util;
 
 import cz.avocado.postal.model.Parcel;
 
+import java.time.Year;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -37,7 +38,7 @@ public class ParcelUtils {
      * @param input
      * @return An empty optional if input was invalid. Populated if validation was successful.
      */
-    public static Optional<Parcel> procesInput(String input) {
+    public static Optional<Parcel> processInput(String input) {
         if (input == null || input.isEmpty() || input.isBlank()) {
             return Optional.empty();
         }

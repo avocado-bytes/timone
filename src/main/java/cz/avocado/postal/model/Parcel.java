@@ -9,7 +9,6 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 
 @Data
-@ToString
 @EqualsAndHashCode
 @AllArgsConstructor
 public class Parcel {
@@ -20,4 +19,8 @@ public class Parcel {
     @NotNull(message = "Packge number cannot be null")
     private Integer packageNumber;
 
+    @Override
+    public String toString() {
+        return String.format("%d %.3f", this.packageNumber, this.packageWeight);
+    }
 }
