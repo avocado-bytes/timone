@@ -1,9 +1,7 @@
 package cz.avocado.postal.model;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.ToString;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
@@ -26,10 +24,6 @@ public class Parcel {
 
     @Override
     public String toString() {
-        if (this.fee > 0) {
-            return String.format("%d %.3f %f", this.packageNumber, this.packageWeight, this.fee);
-        }
-
-        return String.format("%d %.3f", this.packageNumber, this.packageWeight);
+        return String.format("%d %.3f" + (fee > 0 ? " %.2f" : ""), this.packageNumber, this.packageWeight, this.fee);
     }
 }

@@ -28,7 +28,7 @@ public class Utils {
      * @param value
      */
     public static void printMessage(String colorCode, String value) {
-        System.out.println((char) 27 + colorCode + value);
+        System.out.println((char) 27 + colorCode + value + (char) 27 + "[0m");
     }
 
     /**

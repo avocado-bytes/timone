@@ -1,7 +1,6 @@
 package cz.avocado.postal.util;
 
 import cz.avocado.postal.model.Fees;
-import cz.avocado.postal.model.Pair;
 import cz.avocado.postal.model.Parcel;
 
 import java.io.*;
@@ -31,6 +30,7 @@ public class FileUtils {
 
     /**
      * This method reads the contents of the fee configuration file and keeps it in memory to use later for Parcels.
+     *
      * @param filePath
      * @return
      */
@@ -69,7 +69,7 @@ public class FileUtils {
         String line;
         while (true) {
             try {
-                if (!((line = reader.readLine()) != null)) break;
+                if ((line = reader.readLine()) == null) break;
             } catch (IOException e) {
                 Utils.error("Error reading file line.");
                 continue;
@@ -80,7 +80,6 @@ public class FileUtils {
         try {
             reader.close();
         } catch (IOException e) {
-            e.printStackTrace();
             Utils.error("Error closing file. Possible memory leak.");
         }
 

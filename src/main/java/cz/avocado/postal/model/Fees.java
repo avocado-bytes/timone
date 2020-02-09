@@ -11,10 +11,19 @@ public class Fees {
         this.feeMap.put(weightLimit, fee);
     }
 
+    /**
+     * This method returns fee applicable for the weight specified. If no fees are specified a negative value is returned.
+     *
+     * @param weight
+     * @return
+     */
     public Float getFee(float weight) {
         var feeKey = feeMap.keySet().stream().filter(it -> it < weight).reduce(Float::max).orElse((float) -1);
         if (feeKey < 0) {
             return feeKey;
+        }
+        if (!feeMap.containsKey(feeKey)) {
+            return (float) -1;
         }
         return this.feeMap.get(feeKey);
     }

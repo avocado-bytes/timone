@@ -34,7 +34,7 @@ public class ParcelUtils {
 
         float weight;
         try {
-            weight = Float.valueOf(values[0]);
+            weight = Float.parseFloat(values[0]);
         } catch (NumberFormatException e) {
             Utils.error(String.format("Incorrect weight parameter (%s). You are expected to provide numeric value.",
                     values[0]));
@@ -42,7 +42,7 @@ public class ParcelUtils {
             return Optional.empty();
         }
 
-        Integer parcelNumber;
+        int parcelNumber;
         try {
             parcelNumber = Integer.parseInt(values[1]);
         } catch (NumberFormatException e) {

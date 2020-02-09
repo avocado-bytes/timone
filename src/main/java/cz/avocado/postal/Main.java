@@ -54,9 +54,10 @@ public class Main {
 
     /**
      * This utility method parses the command line arguments and applies all required actions accordingly
+     *
      * @param args
      */
-    private static final void cliOptionsHandling(String[] args) {
+    private static void cliOptionsHandling(String[] args) {
         Options options = new Options();
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
@@ -79,6 +80,7 @@ public class Main {
 
             String filePath = cmd.getOptionValue('p');
             String feesFilePath = cmd.getOptionValue('f');
+
             if (feesFilePath != null && !feesFilePath.isEmpty()) {
                 Utils.info(String.format("Starting fee configuration import from file: %s...", feesFilePath));
                 fees = FileUtils.readFeesFile(feesFilePath);
@@ -87,17 +89,17 @@ public class Main {
                 fees = new Fees();
             }
 
-            Utils.info(String.format("Starting import from file: %s...", filePath));
-            FileUtils.readInitializationFile(filePath).forEach(parcel -> {
-                parcel.setFee(fees.getFee(parcel.getPackageWeight()));
-                inputs.add(parcel);
-            });
-            Utils.info("Initial import done.");
+            if (filePath != null) {
+                Utils.info(String.format("Starting import from file: %s...", filePath));
+                FileUtils.readInitializationFile(filePath).forEach(parcel -> {
+                    parcel.setFee(fees.getFee(parcel.getPackageWeight()));
+                    inputs.add(parcel);
+                });
+                Utils.info("Initial import done.");
+            }
 
         } catch (ParseException e) {
             formatter.printHelp("Timone Parcel Utility", options);
-        } catch (Exception e) {
-            System.out.println(e);
         }
     }
 

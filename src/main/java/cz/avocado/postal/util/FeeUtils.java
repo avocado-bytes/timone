@@ -1,10 +1,8 @@
 package cz.avocado.postal.util;
 
 import cz.avocado.postal.model.Pair;
-import cz.avocado.postal.model.Parcel;
 
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 public class FeeUtils {
 
