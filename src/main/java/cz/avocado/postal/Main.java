@@ -7,20 +7,32 @@ import cz.avocado.postal.util.ParcelUtils;
 import cz.avocado.postal.util.Utils;
 import org.apache.commons.cli.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Scanner;
+import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 public class Main {
 
+    private static final int LISTING_DELAY_SECONDS = 60;
     private static final String EXIT_KEYWORD = "quit";
     private static final String LIST_KEYWORD = "list";
-    private static List<Parcel> inputs = new ArrayList<>();
+    private static final Collection<Parcel> INPUTS = Collections.synchronizedCollection(new ArrayList<>());
     private static Fees fees = new Fees();
 
     public static void main(String[] args) {
         cliOptionsHandling(args);
+
+        var executor = Executors.newSingleThreadScheduledExecutor();
+
+        Optional<ScheduledFuture<?>> future = Optional.empty();
+        try {
+            future = Optional.of(executor.scheduleAtFixedRate(Main::printPackageContents, LISTING_DELAY_SECONDS,
+                    LISTING_DELAY_SECONDS, TimeUnit.SECONDS));
+        } catch (RejectedExecutionException e) {
+            Utils.error("Could not schedule periodic package contents listing");
+        }
 
         var scanner = new Scanner(System.in);
 
@@ -34,7 +46,7 @@ public class Main {
             }
 
             if (input.equalsIgnoreCase(LIST_KEYWORD)) {
-                inputs.forEach(it -> Utils.info(it.toString()));
+                printPackageContents();
                 continue;
             }
 
@@ -47,9 +59,22 @@ public class Main {
             var par = parcel.get();
             par.setFee(fees.getFee(par.getPackageWeight()));
             Utils.info("Parcel saved, type 'list' to see saved items");
-            inputs.add(par);
+            synchronized (INPUTS) {
+                INPUTS.add(par);
+            }
         }
 
+        future.ifPresent(callable -> callable.cancel(true));
+        executor.shutdownNow();
+        Utils.info("Bye");
+        System.exit(0);
+    }
+
+    private static void printPackageContents() {
+        Utils.info("Current package listing:");
+        synchronized (INPUTS) {
+            INPUTS.forEach(it -> Utils.info(it.toString()));
+        }
     }
 
     /**
@@ -93,7 +118,7 @@ public class Main {
                 Utils.info(String.format("Starting import from file: %s...", filePath));
                 FileUtils.readInitializationFile(filePath).forEach(parcel -> {
                     parcel.setFee(fees.getFee(parcel.getPackageWeight()));
-                    inputs.add(parcel);
+                    INPUTS.add(parcel);
                 });
                 Utils.info("Initial import done.");
             }
